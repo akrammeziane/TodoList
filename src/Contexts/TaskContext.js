@@ -16,7 +16,7 @@ let TaskContext = createContext({
   handleCompleted: () => {},
 });
 export const TaskProvider = ({ children }) => {
-  // const [tasks, setTasks] = useState([]);
+  console.log("TaskReducer :", TaskReducer);
   const [tasks, dispatch] = useReducer(TaskReducer, []);
 
   useEffect(() => {
