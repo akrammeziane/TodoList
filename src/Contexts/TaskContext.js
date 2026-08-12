@@ -1,4 +1,11 @@
-import { createContext , useContext , useState , useEffect , useMemo} from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+} from "react";
+import TaskReducer from "../Reducers/TaskReducer";
 let TaskContext = createContext({
   tasks: [],
   achievedTasks: [],
@@ -8,82 +15,52 @@ let TaskContext = createContext({
   editTask: () => {},
   handleCompleted: () => {},
 });
-export const TaskProvider = ({children}) => {
+export const TaskProvider = ({ children }) => {
+  // const [tasks, setTasks] = useState([]);
+  const [tasks, dispatch] = useReducer(TaskReducer, []);
 
-  const [tasks, setTasks] = useState([]);
-    useEffect(() => {
-      console.log("useEffect called");
-      const storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-      setTasks(storedTasks);
-    }, []);
-  
-    function addTask(taskName) {
-      const newTask = {
-        id: Date.now(),
-        title: taskName,
-        isComplete: false,
-        buttonColor: "white",
-      };
-      const updatedTasks = [newTask, ...tasks];
-      setTasks(updatedTasks);
-      localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-    }
-  
-    function deleteTask(id) {
-      const updatedTasks = tasks.filter((task) => task.id !== id);
-      setTasks(updatedTasks);
-      localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-    }
-    function editTask(id, newTitle) {
-      const updatedTasks = tasks.map((task) => {
-        if (task.id === id) {
-          return { ...task, title: newTitle };
-        }
-        return task;
-      });
-      setTasks(updatedTasks);
-      localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-    }
-  
-    function handleCompleted(id, isCompleted) {
-      const updatedTasks = tasks.map((task) => {
-        if (task.id === id) {
-          return {
-            ...task,
-            isComplete: isCompleted,
-            buttonColor: isCompleted ? "green" : "white",
-          };
-        }
-        return task;
-      });
-      setTasks(updatedTasks);
-      localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-    }
-    const achievedTasks = useMemo(() => {
-      console.log("calling achievedTasks filter");
-      return tasks.filter((task) => task.isComplete);
-    }, [tasks]);
-    const notAchievedTasks = useMemo(() => {
-      console.log("calling notAchievedTasks filter");
-      return tasks.filter((task) => !task.isComplete);
-    }, [tasks]);
-    return (
-      <TaskContext.Provider
-        value={{
-          tasks,
-          achievedTasks,
-          notAchievedTasks,
-          addTask,
-          deleteTask,
-          editTask,
-          handleCompleted,
-        }}
-      >
-        {children}
-      </TaskContext.Provider>
-    );
+  useEffect(() => {
+    dispatch({ type: "SET_TASKS" });
+  }, []);
+
+  function addTask(taskName) {
+    dispatch({ type: "ADD_TASK", payload: { taskName } });
+  }
+
+  function deleteTask(id) {
+    dispatch({ type: "DELETE_TASK", payload: { id } });
+  }
+  function editTask(id, newTitle) {
+    dispatch({ type: "EDIT_TASK", payload: { id, newTitle } });
+  }
+
+  function handleCompleted(id, isCompleted) {
+    dispatch({ type: "HANDLE_COMPLETED", payload: { id, isCompleted } });
+  }
+  const achievedTasks = useMemo(() => {
+    console.log("calling achievedTasks filter");
+    return tasks.filter((task) => task.isComplete);
+  }, [tasks]);
+  const notAchievedTasks = useMemo(() => {
+    console.log("calling notAchievedTasks filter");
+    return tasks.filter((task) => !task.isComplete);
+  }, [tasks]);
+  return (
+    <TaskContext.Provider
+      value={{
+        tasks,
+        achievedTasks,
+        notAchievedTasks,
+        addTask,
+        deleteTask,
+        editTask,
+        handleCompleted,
+      }}
+    >
+      {children}
+    </TaskContext.Provider>
+  );
 };
 export const useTaskContext = () => {
   return useContext(TaskContext);
 };
-
