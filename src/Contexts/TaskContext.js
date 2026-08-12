@@ -1,11 +1,9 @@
+import { createContext, useContext, useEffect, useMemo } from "react";
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-} from "react";
-import TaskReducer from "../Reducers/TaskReducer";
+  useTaskReducerContext,
+  useTaskDispatchContext,
+} from "../Reducers/TaskReducer.js";
+
 let TaskContext = createContext({
   tasks: [],
   achievedTasks: [],
@@ -15,9 +13,12 @@ let TaskContext = createContext({
   editTask: () => {},
   handleCompleted: () => {},
 });
+
 export const TaskProvider = ({ children }) => {
-  console.log("TaskReducer :", TaskReducer);
-  const [tasks, dispatch] = useReducer(TaskReducer, []);
+  console.log("TaskReducer :", useTaskReducerContext());
+  const tasks = useTaskReducerContext();
+  const dispatch = useTaskDispatchContext();
+  console.log("TaskProvider tasks:", tasks);
 
   useEffect(() => {
     dispatch({ type: "SET_TASKS" });

@@ -1,3 +1,8 @@
+import { createContext, useReducer, useContext } from "react";
+
+const TaskReducerContext = createContext({});
+const TaskDispatchContext = createContext({});
+
 export default function TaskReducer(currentTasks, action) {
   switch (action.type) {
     case "ADD_TASK": {
@@ -50,4 +55,20 @@ export default function TaskReducer(currentTasks, action) {
     default:
       throw Error("Unknown action: " + action.type);
   }
+}
+export const TaskReducerProvider = ({ children }) => {
+  const [tasks, dispatch] = useReducer(TaskReducer, []);
+  return (
+    <TaskReducerContext.Provider value={tasks}>
+      <TaskDispatchContext.Provider value={dispatch}>
+        {children}
+      </TaskDispatchContext.Provider>
+    </TaskReducerContext.Provider>
+  );
+};
+export function useTaskReducerContext() {
+  return useContext(TaskReducerContext);
+}
+export function useTaskDispatchContext() {
+  return useContext(TaskDispatchContext);
 }

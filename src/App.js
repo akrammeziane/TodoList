@@ -8,6 +8,7 @@ import { Routes, Route } from "react-router-dom";
 import AchievedTasks from "./Pages/AchievedTasks";
 import NotAchievedTasks from "./Pages/NotAchievedTasks";
 import AllTasks from "./Pages/AllTasks";
+import { TaskReducerProvider } from "./Reducers/TaskReducer";
 function App() {
   const AppStyle = {
     backgroundColor: "White",
@@ -24,17 +25,19 @@ function App() {
   };
 
   return (
-    <TaskProvider>
-      <div style={AppStyle}>
-        <Header />
-        <Routes>
-          <Route path="/achieved-tasks" element={<AchievedTasks />} />
-          <Route path="/not-achieved-tasks" element={<NotAchievedTasks />} />
-          <Route path="/" element={<AllTasks />} />
-        </Routes>
-        <Footer />
-      </div>
-    </TaskProvider>
+    <TaskReducerProvider>
+      <TaskProvider>
+        <div style={AppStyle}>
+          <Header />
+          <Routes>
+            <Route path="/achieved-tasks" element={<AchievedTasks />} />
+            <Route path="/not-achieved-tasks" element={<NotAchievedTasks />} />
+            <Route path="/" element={<AllTasks />} />
+          </Routes>
+          <Footer />
+        </div>
+      </TaskProvider>
+    </TaskReducerProvider>
   );
 }
 
