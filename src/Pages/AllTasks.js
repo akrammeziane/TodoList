@@ -1,9 +1,12 @@
 import TodoElement from "../TodoList/TodoElement";
-import { useTaskContext } from "../Contexts/TaskContext";
+// import { useTaskContext } from "../Contexts/TaskContext";
+import { useSelector } from "react-redux";
 // import { useContext } from "react";
 export default function AllTasks() {
-  console.log(useTaskContext());
-  const { tasks = [] } = useTaskContext() || {};
+  const tasks = useSelector((state) => state.todos.todos) || [];
+  console.log("tasks in AllTasks:", tasks);
+  // console.log(useTaskContext());
+  // const { tasks = [] } = useTaskContext() || {};
   // tasks.forEach((t) => console.log("task in AllTasks:", t.id, t.buttonColor));
   const todoListStyle = {
     display: "flex",

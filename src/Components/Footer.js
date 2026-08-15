@@ -1,18 +1,22 @@
 import { useState } from "react";
-import { useTaskContext } from "../Contexts/TaskContext";
+// import { useTaskContext } from "../Contexts/TaskContext";
 import AddSuccess from "../features/AddSuccess.js";
+import { useDispatch } from "react-redux";
+import { addTodo } from "../redux-features/todosSlice";
 
 export default function Footer() {
-  console.log(useTaskContext());
+  const dispatch = useDispatch();
+  console.log("dispatch in Footer", addTodo);
+  // console.log(useTaskContext());
   const [inputValue, setInputValue] = useState("");
   const [showAddSuccess, setShowAddSuccess] = useState(false);
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
-  const { addTask } = useTaskContext();
+  // const { addTask } = useTaskContext();
   function handleAddTask() {
     if (inputValue.trim() !== "") {
-      addTask(inputValue);
+      dispatch(addTodo({ taskName: inputValue }));
       setInputValue("");
       setTimeout(() => {
         setShowAddSuccess(true);

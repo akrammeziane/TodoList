@@ -1,9 +1,18 @@
 import TodoElement from "../TodoList/TodoElement";
-import { useTaskContext } from "../Contexts/TaskContext";
+// import { useTaskContext } from "../Contexts/TaskContext";
 // import { useContext } from "react";
+import { useSelector } from "react-redux";
+import { useMemo } from "react";
 export default function NotAchievedTasks() {
-  console.log(useTaskContext());
-  const { notAchievedTasks = [] } = useTaskContext() || {};
+  const tasks = useSelector((state) => state.todos.todos) || [];
+  console.log("tasks in NotAchievedTasks:", tasks);
+
+  // console.log(useTaskContext());
+  // const { notAchievedTasks = [] } = useTaskContext() || {};
+  const notAchievedTasks = useMemo(() => {
+    console.log("calling notAchievedTasks filter");
+    return tasks.filter((task) => !task.isComplete);
+  }, [tasks]);
   const todoListStyle = {
     display: "flex",
     flexDirection: "column",

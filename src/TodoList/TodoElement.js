@@ -1,18 +1,22 @@
 import { useState } from "react";
-import { useTaskContext } from "../Contexts/TaskContext";
+// import { useTaskContext } from "../Contexts/TaskContext";
 import EditPopUp from "../features/EditPopUp";
 import SaveSuccess from "../features/SaveSuccess";
+import { useDispatch } from "react-redux";
+import { handleCompleted, removeTodo } from "../redux-features/todosSlice";
 export default function TodoElement({ id, taskName, status, buttonColor }) {
-  console.log(useTaskContext());
+  const dispatch = useDispatch();
+  console.log("dispatch in TodoElement", handleCompleted, removeTodo);
+  // console.log(useTaskContext());
   // console.log("EditPopUp import:", EditPopUp);
   // console.log("SaveSuccess import:", SaveSuccess);
-  const { deleteTask, handleCompleted } = useTaskContext();
+  // const { deleteTask, handleCompleted } = useTaskContext();
   const [isCompleted, setIsCompleted] = useState(status);
   const [isEditPopUpOpen, setIsEditPopUpOpen] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   function handleComplete() {
     setIsCompleted(!isCompleted);
-    handleCompleted(id, !isCompleted);
+    dispatch(handleCompleted({ id, isCompleted: !isCompleted }));
 
     // if (!isCompleted) {
     //   completedTaskshandler(id);
@@ -37,7 +41,7 @@ export default function TodoElement({ id, taskName, status, buttonColor }) {
     backgroundColor: buttonColor,
   };
   function handleDelete() {
-    deleteTask(id);
+    dispatch(removeTodo(id));
   }
   function handleEdit() {
     setIsEditPopUpOpen(true);

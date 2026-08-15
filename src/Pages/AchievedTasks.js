@@ -1,9 +1,17 @@
 import TodoElement from "../TodoList/TodoElement";
 import { useTaskContext } from "../Contexts/TaskContext";
+import { useSelector } from "react-redux";
+import { useMemo } from "react";
 // import { useContext } from "react";
 export default function AchievedTasks() {
-  console.log(useTaskContext());
-  const { achievedTasks = [] } = useTaskContext() || {};
+  const tasks = useSelector((state) => state.todos.todos) || [];
+  console.log("tasks in AchievedTasks:", tasks);
+  const achievedTasks = useMemo(() => {
+    console.log("calling achievedTasks filter");
+    return tasks.filter((task) => task.isComplete);
+  }, [tasks]);
+  // console.log(useTaskContext());
+  // const { achievedTasks = [] } = useTaskContext() || {};
   // console.log("achievedTasks", achievedTasks);
   const todoListStyle = {
     display: "flex",

@@ -1,15 +1,19 @@
 import { useState } from "react";
-import { useTaskContext } from "../Contexts/TaskContext";
+// import { useTaskContext } from "../Contexts/TaskContext";
+import { useDispatch } from "react-redux";
+import { editTodo } from "../redux-features/todosSlice";
 export default function EditPopUp({
   id,
   currentTitle,
   handlePopUpClose,
   handleSaveSuccess,
 }) {
-  console.log(useTaskContext());
+  const dispatch = useDispatch();
+  console.log("dispatch in EditPopUp", editTodo);
+  // console.log(useTaskContext());
   // console.log("the current title is", currentTitle);
   const [inputValue, setInputValue] = useState(currentTitle);
-  const { editTask } = useTaskContext();
+  // const { editTask } = useTaskContext();
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
   };
@@ -67,7 +71,7 @@ export default function EditPopUp({
       alert("يرجى إدخال عنوان المهمة");
       return;
     }
-    editTask(id, inputValue);
+    dispatch(editTodo({ id, newTitle: inputValue }));
     handleSaveSuccess();
     handlePopUpClose(false);
   }
