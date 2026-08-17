@@ -48,6 +48,8 @@ public/
   manifest.json
   robots.txt
 src/
+  app/
+    store.js
   Components/
     Footer.js
     Header.js
@@ -61,9 +63,10 @@ src/
     AchievedTasks.js
     AllTasks.js
     NotAchievedTasks.js
+  redux-features/
+    todosSlice.js
   TodoList/
     TodoElement.js
-    TodoList.js
   App.css
   App.js
   App.test.js
@@ -79,569 +82,6 @@ README.md
 
 <files>
 This section contains the contents of the repository's files.
-
-<file path="src/Components/Footer.js">
-import { useState } from "react";
-import { useTaskContext } from "../Contexts/TaskContext";
-import AddSuccess from "../features/AddSuccess.js";
-
-export default function Footer() {
-  console.log(useTaskContext());
-  const [inputValue, setInputValue] = useState("");
-  const [showAddSuccess, setShowAddSuccess] = useState(false);
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
-  const { addTask } = useTaskContext();
-  function handleAddTask() {
-    if (inputValue.trim() !== "") {
-      addTask(inputValue);
-      setInputValue("");
-      setTimeout(() => {
-        setShowAddSuccess(true);
-      }, 100);
-    }
-    setTimeout(() => {
-      setShowAddSuccess(false);
-    }, 3000);
-  }
-  const footerStyle = {
-    display: "flex",
-    gap: "10px",
-    marginTop: "10px",
-    width: "100%",
-  };
-  const buttonStyle = {
-    backgroundColor: "rgb(133, 30, 30)",
-    color: "white",
-    padding: "30px",
-    border: "1px solid rgba(0, 0, 0, 0.2)",
-    borderRadius: "5px",
-    cursor: "pointer",
-    width: "20%",
-    fontSize: "15px",
-  };
-  const inputStyle = {
-    padding: "10px",
-    border: "1px solid rgba(231, 221, 221, 0.74)",
-    borderRadius: "5px",
-    width: "80%",
-  };
-  return (
-    <div style={footerStyle}>
-      <button style={buttonStyle} onClick={handleAddTask}>
-        اضافة
-      </button>
-      <input
-        type="text"
-        placeholder="عنوان المهمة"
-        style={inputStyle}
-        value={inputValue}
-        onChange={handleInputChange}
-      />
-      {showAddSuccess && <AddSuccess />}
-    </div>
-  );
-}
-</file>
-
-<file path="src/Components/Header.js">
-import { Link } from "react-router-dom";
-export default function Header() {
-  const headerStyle = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "10px",
-  };
-  const buttonStyle = {
-    backgroundColor: "white",
-    border: "1px solid rgba(0, 0, 0, 0.2)",
-    padding: "10px",
-    cursor: "pointer",
-    color: "purple",
-  };
-  return (
-    <div style={headerStyle}>
-      <h1 style={{ fontSize: "80px", marginTop: "0px" }}>مهامي</h1>
-      <div>
-        <Link to="/not-achieved-tasks">
-          <button style={buttonStyle}>غير منجز</button>
-        </Link>
-        <Link to="/achieved-tasks">
-          <button style={buttonStyle}>منجز</button>
-        </Link>
-        <Link to="/">
-          <button style={buttonStyle}>الكل</button>
-        </Link>
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="src/Contexts/TaskContext.js">
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
-let TaskContext = createContext({
-  tasks: [],
-  achievedTasks: [],
-  notAchievedTasks: [],
-  addTask: () => {},
-  deleteTask: () => {},
-  editTask: () => {},
-  handleCompleted: () => {},
-});
-export const TaskProvider = ({ children }) => {
-  const [tasks, setTasks] = useState([]);
-  useEffect(() => {
-    console.log("useEffect called");
-    const storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    setTasks(storedTasks);
-  }, []);
-
-  function addTask(taskName) {
-    const newTask = {
-      id: Date.now(),
-      title: taskName,
-      isComplete: false,
-      buttonColor: "white",
-    };
-    const updatedTasks = [newTask, ...tasks];
-    setTasks(updatedTasks);
-    localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-  }
-
-  function deleteTask(id) {
-    const updatedTasks = tasks.filter((task) => task.id !== id);
-    setTasks(updatedTasks);
-    localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-  }
-  function editTask(id, newTitle) {
-    const updatedTasks = tasks.map((task) => {
-      if (task.id === id) {
-        return { ...task, title: newTitle };
-      }
-      return task;
-    });
-    setTasks(updatedTasks);
-    localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-  }
-
-  function handleCompleted(id, isCompleted) {
-    const updatedTasks = tasks.map((task) => {
-      if (task.id === id) {
-        return {
-          ...task,
-          isComplete: isCompleted,
-          buttonColor: isCompleted ? "green" : "white",
-        };
-      }
-      return task;
-    });
-    setTasks(updatedTasks);
-    localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-  }
-  const achievedTasks = useMemo(() => {
-    console.log("calling achievedTasks filter");
-    return tasks.filter((task) => task.isComplete);
-  }, [tasks]);
-  const notAchievedTasks = useMemo(() => {
-    console.log("calling notAchievedTasks filter");
-    return tasks.filter((task) => !task.isComplete);
-  }, [tasks]);
-  return (
-    <TaskContext.Provider
-      value={{
-        tasks,
-        achievedTasks,
-        notAchievedTasks,
-        addTask,
-        deleteTask,
-        editTask,
-        handleCompleted,
-      }}
-    >
-      {children}
-    </TaskContext.Provider>
-  );
-};
-export const useTaskContext = () => {
-  return useContext(TaskContext);
-};
-</file>
-
-<file path="src/features/AddSuccess.js">
-export default function AddSuccess() {
-  const containerStyle = {
-    backgroundColor: "green",
-    position: "absolute",
-    bottom: "10px",
-    left: "20px",
-    padding: "10px",
-    borderRadius: "5px",
-    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-    zIndex: "1000",
-  };
-  const textStyle = {
-    fontSize: "20px",
-    color: "white",
-  };
-  return (
-    <div style={containerStyle}>
-      <h1 style={textStyle}>تمت الإضافة بنجاح</h1>
-    </div>
-  );
-}
-</file>
-
-<file path="src/features/EditPopUp.js">
-import { useState } from "react";
-import { useTaskContext } from "../Contexts/TaskContext";
-export default function EditPopUp({
-  id,
-  currentTitle,
-  handlePopUpClose,
-  handleSaveSuccess,
-}) {
-  console.log(useTaskContext());
-  // console.log("the current title is", currentTitle);
-  const [inputValue, setInputValue] = useState(currentTitle);
-  const { editTask } = useTaskContext();
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-  };
-  const popUpStyle = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(26, 24, 24, 0.37)",
-    position: "absolute",
-    top: "0",
-    left: "0",
-    right: "0",
-    bottom: "0",
-    width: "100vw",
-    height: "100vh",
-  };
-  const popUpContentStyle = {
-    display: "flex",
-    justifyContent: "space-between",
-    width: "300px",
-    padding: "20px",
-    backgroundColor: "white",
-    borderRadius: "5px",
-    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-    height: "auto",
-    position: "relative",
-  };
-  const buttonStyle = {
-    backgroundColor: "rgb(133, 30, 30)",
-    color: "white",
-    padding: "10px",
-    border: "1px solid rgba(0, 0, 0, 0.2)",
-    borderRadius: "5px",
-    cursor: "pointer",
-    position: "absolute",
-    bottom: "20px",
-    left: "10px",
-    width: "20%",
-  };
-  const inputStyle = {
-    padding: "10px",
-    border: "1px solid rgba(87, 81, 81, 0.85)",
-    borderRadius: "5px",
-    width: "100%",
-  };
-  function handleClickInside(event) {
-    // console.log(event);
-    event.stopPropagation();
-  }
-  function handleClose() {
-    handlePopUpClose(false);
-  }
-  function handleSave() {
-    if (inputValue.trim() === "") {
-      alert("يرجى إدخال عنوان المهمة");
-      return;
-    }
-    editTask(id, inputValue);
-    handleSaveSuccess();
-    handlePopUpClose(false);
-  }
-
-  return (
-    <div onClick={handleClose} style={popUpStyle}>
-      <div style={popUpContentStyle} onClick={(e) => handleClickInside(e)}>
-        <div>
-          <h2>تعديل المهمة</h2>
-          <input
-            type="text"
-            value={inputValue}
-            onChange={handleInputChange}
-            style={inputStyle}
-          />
-        </div>
-        <div>
-          <button style={buttonStyle} onClick={handleSave}>
-            حفظ
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="src/features/SaveSuccess.js">
-export default function SaveSuccess() {
-  const containerStyle = {
-    backgroundColor: "green",
-    position: "absolute",
-    bottom: "10px",
-    left: "20px",
-    padding: "10px",
-    borderRadius: "5px",
-    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-    zIndex: "1000",
-  };
-  const textStyle = {
-    fontSize: "20px",
-    color: "white",
-  };
-  return (
-    <div style={containerStyle}>
-      <h1 style={textStyle}>تمت الحفظ بنجاح</h1>
-    </div>
-  );
-}
-</file>
-
-<file path="src/Pages/AchievedTasks.js">
-import TodoElement from "../TodoList/TodoElement";
-import { useTaskContext } from "../Contexts/TaskContext";
-// import { useContext } from "react";
-export default function AchievedTasks() {
-  console.log(useTaskContext());
-  const { achievedTasks = [] } = useTaskContext() || {};
-  // console.log("achievedTasks", achievedTasks);
-  const todoListStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    width: "100%",
-    marginTop: "20px",
-  };
-
-  const TaskList = achievedTasks.map((task) => {
-    if (!task || task.title.trim() === "") return null;
-    return (
-      <TodoElement
-        key={task.id}
-        id={task.id}
-        taskName={task.title}
-        status={task.isComplete}
-        buttonColor={task.buttonColor}
-      />
-    );
-  });
-  return (
-    <div style={todoListStyle} dir="rtl">
-      {TaskList.slice(0, 3)}
-    </div>
-  );
-}
-</file>
-
-<file path="src/Pages/AllTasks.js">
-import TodoElement from "../TodoList/TodoElement";
-import { useTaskContext } from "../Contexts/TaskContext";
-// import { useContext } from "react";
-export default function AllTasks() {
-  console.log(useTaskContext());
-  const { tasks = [] } = useTaskContext() || {};
-  // tasks.forEach((t) => console.log("task in AllTasks:", t.id, t.buttonColor));
-  const todoListStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    width: "100%",
-    marginTop: "20px",
-  };
-  // console.log("tasks", tasks);
-
-  const TaskList = tasks.map((task) => {
-    if (!task || task.title.trim() === "") return null;
-    return (
-      <TodoElement
-        key={task.id}
-        id={task.id}
-        taskName={task.title}
-        status={task.isComplete}
-        buttonColor={task.buttonColor}
-      />
-    );
-  });
-  return (
-    <div style={todoListStyle} dir="rtl">
-      {TaskList.slice(0, 3)}
-    </div>
-  );
-}
-</file>
-
-<file path="src/Pages/NotAchievedTasks.js">
-import TodoElement from "../TodoList/TodoElement";
-import { useTaskContext } from "../Contexts/TaskContext";
-// import { useContext } from "react";
-export default function NotAchievedTasks() {
-  console.log(useTaskContext());
-  const { notAchievedTasks = [] } = useTaskContext() || {};
-  const todoListStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    width: "100%",
-    marginTop: "20px",
-  };
-
-  const TaskList = notAchievedTasks.map((task) => {
-    if (!task || task.title.trim() === "") return null;
-    return (
-      <TodoElement
-        key={task.id}
-        id={task.id}
-        taskName={task.title}
-        status={task.isComplete}
-        buttonColor={task.buttonColor}
-      />
-    );
-  });
-  return (
-    <div style={todoListStyle} dir="rtl">
-      {TaskList.slice(0, 3)}
-    </div>
-  );
-}
-</file>
-
-<file path="src/TodoList/TodoElement.js">
-import { useState } from "react";
-import { useTaskContext } from "../Contexts/TaskContext";
-import EditPopUp from "../features/EditPopUp";
-import SaveSuccess from "../features/SaveSuccess";
-export default function TodoElement({ id, taskName, status, buttonColor }) {
-  console.log(useTaskContext());
-  // console.log("EditPopUp import:", EditPopUp);
-  // console.log("SaveSuccess import:", SaveSuccess);
-  const { deleteTask, handleCompleted } = useTaskContext();
-  const [isCompleted, setIsCompleted] = useState(status);
-  const [isEditPopUpOpen, setIsEditPopUpOpen] = useState(false);
-  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
-  function handleComplete() {
-    setIsCompleted(!isCompleted);
-    handleCompleted(id, !isCompleted);
-
-    // if (!isCompleted) {
-    //   completedTaskshandler(id);
-    // } else {
-    //   notCompletedTaskshandler(id);
-    // }
-  }
-
-  const todoElementStyle = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "10px",
-    border: "1px solid rgba(0, 0, 0, 0.2)",
-    borderRadius: "5px",
-    marginBottom: "10px",
-    backgroundColor: "rgb(26, 48, 150)",
-    boxShadow: "0px 4px 6px rgba(15, 5, 5, 0.6)",
-  };
-  // console.log("the button color is", buttonColor);
-  const achievedStyle = {
-    backgroundColor: buttonColor,
-  };
-  function handleDelete() {
-    deleteTask(id);
-  }
-  function handleEdit() {
-    setIsEditPopUpOpen(true);
-  }
-  function handleSaveSuccess() {
-    setTimeout(() => {
-      setShowSaveSuccess(true);
-    }, 100);
-    setTimeout(() => {
-      setShowSaveSuccess(false);
-    }, 3000);
-  }
-
-  return (
-    <div>
-      <div style={todoElementStyle} dir="rtl">
-        <div>
-          <h2>{taskName}</h2>
-        </div>
-        <div dir="ltr" style={{ display: "flex", gap: "10px" }}>
-          <button onClick={handleEdit}>تعديل</button>
-          <button onClick={handleDelete}>حذف</button>
-          <button style={achievedStyle} onClick={handleComplete}>
-            منجز
-          </button>
-        </div>
-      </div>
-      <div>
-        {isEditPopUpOpen && (
-          <EditPopUp
-            id={id}
-            currentTitle={taskName}
-            handlePopUpClose={setIsEditPopUpOpen}
-            handleSaveSuccess={handleSaveSuccess}
-          />
-        )}
-        {showSaveSuccess && <SaveSuccess />}
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="src/TodoList/TodoList.js">
-import TodoElement from "./TodoElement";
-import { TaskContext } from "../Contexts/TaskContext";
-import { useContext } from "react";
-export default function TodoList() {
-  const { tasks = [] } = useContext(TaskContext) || {};
-  const todoListStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    width: "100%",
-    marginTop: "20px",
-  };
-  console.log("tasks", tasks);
-
-  const TaskList = tasks.map((task) => {
-    if (!task || task.title.trim() === "") return null;
-    return (
-      <TodoElement
-        key={task.id}
-        id={task.id}
-        taskName={task.title}
-        status={task.isComplete}
-        buttonColor={task.buttonColor}
-      />
-    );
-  });
-  return (
-    <div style={todoListStyle} dir="rtl">
-      {TaskList.slice(0, 3)}
-    </div>
-  );
-}
-</file>
 
 <file path="public/index.html">
 <!DOCTYPE html>
@@ -721,6 +161,740 @@ export default function TodoList() {
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Disallow:
+</file>
+
+<file path="src/Components/Header.js">
+import { Link } from "react-router-dom";
+export default function Header() {
+  const headerStyle = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "10px",
+  };
+  const buttonStyle = {
+    backgroundColor: "white",
+    border: "1px solid rgba(0, 0, 0, 0.2)",
+    padding: "10px",
+    cursor: "pointer",
+    color: "purple",
+  };
+  return (
+    <div style={headerStyle}>
+      <h1 style={{ fontSize: "80px", marginTop: "0px" }}>مهامي</h1>
+      <div>
+        <Link to="/not-achieved-tasks">
+          <button style={buttonStyle}>غير منجز</button>
+        </Link>
+        <Link to="/achieved-tasks">
+          <button style={buttonStyle}>منجز</button>
+        </Link>
+        <Link to="/">
+          <button style={buttonStyle}>الكل</button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/features/AddSuccess.js">
+export default function AddSuccess() {
+  const containerStyle = {
+    backgroundColor: "green",
+    position: "absolute",
+    bottom: "10px",
+    left: "20px",
+    padding: "10px",
+    borderRadius: "5px",
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+    zIndex: "1000",
+  };
+  const textStyle = {
+    fontSize: "20px",
+    color: "white",
+  };
+  return (
+    <div style={containerStyle}>
+      <h1 style={textStyle}>تمت الإضافة بنجاح</h1>
+    </div>
+  );
+}
+</file>
+
+<file path="src/features/SaveSuccess.js">
+export default function SaveSuccess() {
+  const containerStyle = {
+    backgroundColor: "green",
+    position: "absolute",
+    bottom: "10px",
+    left: "20px",
+    padding: "10px",
+    borderRadius: "5px",
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+    zIndex: "1000",
+  };
+  const textStyle = {
+    fontSize: "20px",
+    color: "white",
+  };
+  return (
+    <div style={containerStyle}>
+      <h1 style={textStyle}>تمت الحفظ بنجاح</h1>
+    </div>
+  );
+}
+</file>
+
+<file path="src/App.test.js">
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+</file>
+
+<file path="src/index.css">
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+</file>
+
+<file path="src/logo.svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 841.9 595.3"><g fill="#61DAFB"><path d="M666.3 296.5c0-32.5-40.7-63.3-103.1-82.4 14.4-63.6 8-114.2-20.2-130.4-6.5-3.8-14.1-5.6-22.4-5.6v22.3c4.6 0 8.3.9 11.4 2.6 13.6 7.8 19.5 37.5 14.9 75.7-1.1 9.4-2.9 19.3-5.1 29.4-19.6-4.8-41-8.5-63.5-10.9-13.5-18.5-27.5-35.3-41.6-50 32.6-30.3 63.2-46.9 84-46.9V78c-27.5 0-63.5 19.6-99.9 53.6-36.4-33.8-72.4-53.2-99.9-53.2v22.3c20.7 0 51.4 16.5 84 46.6-14 14.7-28 31.4-41.3 49.9-22.6 2.4-44 6.1-63.6 11-2.3-10-4-19.7-5.2-29-4.7-38.2 1.1-67.9 14.6-75.8 3-1.8 6.9-2.6 11.5-2.6V78.5c-8.4 0-16 1.8-22.6 5.6-28.1 16.2-34.4 66.7-19.9 130.1-62.2 19.2-102.7 49.9-102.7 82.3 0 32.5 40.7 63.3 103.1 82.4-14.4 63.6-8 114.2 20.2 130.4 6.5 3.8 14.1 5.6 22.5 5.6 27.5 0 63.5-19.6 99.9-53.6 36.4 33.8 72.4 53.2 99.9 53.2 8.4 0 16-1.8 22.6-5.6 28.1-16.2 34.4-66.7 19.9-130.1 62-19.1 102.5-49.9 102.5-82.3zm-130.2-66.7c-3.7 12.9-8.3 26.2-13.5 39.5-4.1-8-8.4-16-13.1-24-4.6-8-9.5-15.8-14.4-23.4 14.2 2.1 27.9 4.7 41 7.9zm-45.8 106.5c-7.8 13.5-15.8 26.3-24.1 38.2-14.9 1.3-30 2-45.2 2-15.1 0-30.2-.7-45-1.9-8.3-11.9-16.4-24.6-24.2-38-7.6-13.1-14.5-26.4-20.8-39.8 6.2-13.4 13.2-26.8 20.7-39.9 7.8-13.5 15.8-26.3 24.1-38.2 14.9-1.3 30-2 45.2-2 15.1 0 30.2.7 45 1.9 8.3 11.9 16.4 24.6 24.2 38 7.6 13.1 14.5 26.4 20.8 39.8-6.3 13.4-13.2 26.8-20.7 39.9zm32.3-13c5.4 13.4 10 26.8 13.8 39.8-13.1 3.2-26.9 5.9-41.2 8 4.9-7.7 9.8-15.6 14.4-23.7 4.6-8 8.9-16.1 13-24.1zM421.2 430c-9.3-9.6-18.6-20.3-27.8-32 9 .4 18.2.7 27.5.7 9.4 0 18.7-.2 27.8-.7-9 11.7-18.3 22.4-27.5 32zm-74.4-58.9c-14.2-2.1-27.9-4.7-41-7.9 3.7-12.9 8.3-26.2 13.5-39.5 4.1 8 8.4 16 13.1 24 4.7 8 9.5 15.8 14.4 23.4zM420.7 163c9.3 9.6 18.6 20.3 27.8 32-9-.4-18.2-.7-27.5-.7-9.4 0-18.7.2-27.8.7 9-11.7 18.3-22.4 27.5-32zm-74 58.9c-4.9 7.7-9.8 15.6-14.4 23.7-4.6 8-8.9 16-13 24-5.4-13.4-10-26.8-13.8-39.8 13.1-3.1 26.9-5.8 41.2-7.9zm-90.5 125.2c-35.4-15.1-58.3-34.9-58.3-50.6 0-15.7 22.9-35.6 58.3-50.6 8.6-3.7 18-7 27.7-10.1 5.7 19.6 13.2 40 22.5 60.9-9.2 20.8-16.6 41.1-22.2 60.6-9.9-3.1-19.3-6.5-28-10.2zM310 490c-13.6-7.8-19.5-37.5-14.9-75.7 1.1-9.4 2.9-19.3 5.1-29.4 19.6 4.8 41 8.5 63.5 10.9 13.5 18.5 27.5 35.3 41.6 50-32.6 30.3-63.2 46.9-84 46.9-4.5-.1-8.3-1-11.3-2.7zm237.2-76.2c4.7 38.2-1.1 67.9-14.6 75.8-3 1.8-6.9 2.6-11.5 2.6-20.7 0-51.4-16.5-84-46.6 14-14.7 28-31.4 41.3-49.9 22.6-2.4 44-6.1 63.6-11 2.3 10.1 4.1 19.8 5.2 29.1zm38.5-66.7c-8.6 3.7-18 7-27.7 10.1-5.7-19.6-13.2-40-22.5-60.9 9.2-20.8 16.6-41.1 22.2-60.6 9.9 3.1 19.3 6.5 28.1 10.2 35.4 15.1 58.3 34.9 58.3 50.6-.1 15.7-23 35.6-58.4 50.6zM320.8 78.4z"/><circle cx="420.9" cy="296.5" r="45.7"/><path d="M520.5 78.1z"/></g></svg>
+</file>
+
+<file path="src/reportWebVitals.js">
+const reportWebVitals = onPerfEntry => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+</file>
+
+<file path="src/setupTests.js">
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
+</file>
+
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+</file>
+
+<file path="README.md">
+# Getting Started with Create React App
+
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## Available Scripts
+
+In the project directory, you can run:
+
+### `npm start`
+
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
+
+### `npm test`
+
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+
+### `npm run build`
+
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
+
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
+
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+
+### `npm run eject`
+
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+
+## Learn More
+
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
+
+### Code Splitting
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+
+### Analyzing the Bundle Size
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+
+### Making a Progressive Web App
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+
+### Advanced Configuration
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+
+### Deployment
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+
+### `npm run build` fails to minify
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+</file>
+
+<file path="src/app/store.js">
+import { configureStore } from "@reduxjs/toolkit";
+import todosReducer from "../redux-features/todosSlice";
+
+export const store = configureStore({
+  reducer: {
+    todos: todosReducer,
+  },
+});
+console.log("store", store.getState());
+</file>
+
+<file path="src/Components/Footer.js">
+import { useState } from "react";
+// import { useTaskContext } from "../Contexts/TaskContext";
+import AddSuccess from "../features/AddSuccess.js";
+import { useDispatch } from "react-redux";
+import { addTodo } from "../redux-features/todosSlice";
+
+export default function Footer() {
+  const dispatch = useDispatch();
+  console.log("dispatch in Footer", addTodo);
+  // console.log(useTaskContext());
+  const [inputValue, setInputValue] = useState("");
+  const [showAddSuccess, setShowAddSuccess] = useState(false);
+  const handleInputChange = (event) => {
+    setInputValue(event.target.value);
+  };
+  // const { addTask } = useTaskContext();
+  function handleAddTask() {
+    if (inputValue.trim() !== "") {
+      dispatch(addTodo({ taskName: inputValue }));
+      setInputValue("");
+      setTimeout(() => {
+        setShowAddSuccess(true);
+      }, 100);
+    }
+    setTimeout(() => {
+      setShowAddSuccess(false);
+    }, 3000);
+  }
+  const footerStyle = {
+    display: "flex",
+    gap: "10px",
+    marginTop: "10px",
+    width: "100%",
+  };
+  const buttonStyle = {
+    backgroundColor: "rgb(133, 30, 30)",
+    color: "white",
+    padding: "30px",
+    border: "1px solid rgba(0, 0, 0, 0.2)",
+    borderRadius: "5px",
+    cursor: "pointer",
+    width: "20%",
+    fontSize: "15px",
+  };
+  const inputStyle = {
+    padding: "10px",
+    border: "1px solid rgba(231, 221, 221, 0.74)",
+    borderRadius: "5px",
+    width: "80%",
+  };
+  return (
+    <div style={footerStyle}>
+      <button style={buttonStyle} onClick={handleAddTask}>
+        اضافة
+      </button>
+      <input
+        type="text"
+        placeholder="عنوان المهمة"
+        style={inputStyle}
+        value={inputValue}
+        onChange={handleInputChange}
+      />
+      {showAddSuccess && <AddSuccess />}
+    </div>
+  );
+}
+</file>
+
+<file path="src/Contexts/TaskContext.js">
+import { createContext, useContext, useEffect} from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setTodos } from "../redux-features/todosSlice";
+
+let TaskContext = createContext({
+  // achievedTasks: [],
+  // notAchievedTasks: [],
+});
+export const TaskProvider = ({ children }) => {
+  const tasks = useSelector((state) => state.todos.todos) || [];
+  console.log("tasks in TaskProvider:", tasks);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(setTodos());
+  }, []);
+
+  // const achievedTasks = useMemo(() => {
+  //   console.log("calling achievedTasks filter");
+  //   return tasks.filter((task) => task.isComplete);
+  // }, [tasks]);
+  // const notAchievedTasks = useMemo(() => {
+  //   console.log("calling notAchievedTasks filter");
+  //   return tasks.filter((task) => !task.isComplete);
+  // }, [tasks]);
+  return (
+    <TaskContext.Provider
+      value={
+        {
+          // achievedTasks,
+          // notAchievedTasks,
+        }
+      }
+    >
+      {children}
+    </TaskContext.Provider>
+  );
+};
+export const useTaskContext = () => {
+  return useContext(TaskContext);
+};
+</file>
+
+<file path="src/features/EditPopUp.js">
+import { useState } from "react";
+// import { useTaskContext } from "../Contexts/TaskContext";
+import { useDispatch } from "react-redux";
+import { editTodo } from "../redux-features/todosSlice";
+export default function EditPopUp({
+  id,
+  currentTitle,
+  handlePopUpClose,
+  handleSaveSuccess,
+}) {
+  const dispatch = useDispatch();
+  console.log("dispatch in EditPopUp", editTodo);
+  // console.log(useTaskContext());
+  // console.log("the current title is", currentTitle);
+  const [inputValue, setInputValue] = useState(currentTitle);
+  // const { editTask } = useTaskContext();
+  const handleInputChange = (event) => {
+    setInputValue(event.target.value);
+  };
+  const popUpStyle = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(26, 24, 24, 0.37)",
+    position: "absolute",
+    top: "0",
+    left: "0",
+    right: "0",
+    bottom: "0",
+    width: "100vw",
+    height: "100vh",
+  };
+  const popUpContentStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    width: "300px",
+    padding: "20px",
+    backgroundColor: "white",
+    borderRadius: "5px",
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+    height: "auto",
+    position: "relative",
+  };
+  const buttonStyle = {
+    backgroundColor: "rgb(133, 30, 30)",
+    color: "white",
+    padding: "10px",
+    border: "1px solid rgba(0, 0, 0, 0.2)",
+    borderRadius: "5px",
+    cursor: "pointer",
+    position: "absolute",
+    bottom: "20px",
+    left: "10px",
+    width: "20%",
+  };
+  const inputStyle = {
+    padding: "10px",
+    border: "1px solid rgba(87, 81, 81, 0.85)",
+    borderRadius: "5px",
+    width: "100%",
+  };
+  function handleClickInside(event) {
+    // console.log(event);
+    event.stopPropagation();
+  }
+  function handleClose() {
+    handlePopUpClose(false);
+  }
+  function handleSave() {
+    if (inputValue.trim() === "") {
+      alert("يرجى إدخال عنوان المهمة");
+      return;
+    }
+    dispatch(editTodo({ id, newTitle: inputValue }));
+    handleSaveSuccess();
+    handlePopUpClose(false);
+  }
+
+  return (
+    <div onClick={handleClose} style={popUpStyle}>
+      <div style={popUpContentStyle} onClick={(e) => handleClickInside(e)}>
+        <div>
+          <h2>تعديل المهمة</h2>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <button style={buttonStyle} onClick={handleSave}>
+            حفظ
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/Pages/AchievedTasks.js">
+import TodoElement from "../TodoList/TodoElement";
+// import { useTaskContext } from "../Contexts/TaskContext";
+import { useSelector } from "react-redux";
+import { useMemo } from "react";
+// import { useContext } from "react";
+export default function AchievedTasks() {
+  const tasks = useSelector((state) => state.todos.todos) || [];
+  console.log("tasks in AchievedTasks:", tasks);
+  const achievedTasks = useMemo(() => {
+    console.log("calling achievedTasks filter");
+    return tasks.filter((task) => task.isComplete);
+  }, [tasks]);
+  // console.log(useTaskContext());
+  // const { achievedTasks = [] } = useTaskContext() || {};
+  // console.log("achievedTasks", achievedTasks);
+  const todoListStyle = {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+    width: "100%",
+    marginTop: "20px",
+  };
+
+  const TaskList = achievedTasks.map((task) => {
+    if (!task || task.title.trim() === "") return null;
+    return (
+      <TodoElement
+        key={task.id}
+        id={task.id}
+        taskName={task.title}
+        status={task.isComplete}
+        buttonColor={task.buttonColor}
+      />
+    );
+  });
+  return (
+    <div style={todoListStyle} dir="rtl">
+      {TaskList.slice(0, 3)}
+    </div>
+  );
+}
+</file>
+
+<file path="src/Pages/AllTasks.js">
+import TodoElement from "../TodoList/TodoElement";
+// import { useTaskContext } from "../Contexts/TaskContext";
+import { useSelector } from "react-redux";
+// import { useContext } from "react";
+export default function AllTasks() {
+  const tasks = useSelector((state) => state.todos.todos) || [];
+  console.log("tasks in AllTasks:", tasks);
+  // console.log(useTaskContext());
+  // const { tasks = [] } = useTaskContext() || {};
+  // tasks.forEach((t) => console.log("task in AllTasks:", t.id, t.buttonColor));
+  const todoListStyle = {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+    width: "100%",
+    marginTop: "20px",
+  };
+  // console.log("tasks", tasks);
+
+  const TaskList = tasks.map((task) => {
+    if (!task || task.title.trim() === "") return null;
+    return (
+      <TodoElement
+        key={task.id}
+        id={task.id}
+        taskName={task.title}
+        status={task.isComplete}
+        buttonColor={task.buttonColor}
+      />
+    );
+  });
+  return (
+    <div style={todoListStyle} dir="rtl">
+      {TaskList.slice(0, 3)}
+    </div>
+  );
+}
+</file>
+
+<file path="src/Pages/NotAchievedTasks.js">
+import TodoElement from "../TodoList/TodoElement";
+// import { useTaskContext } from "../Contexts/TaskContext";
+// import { useContext } from "react";
+import { useSelector } from "react-redux";
+import { useMemo } from "react";
+export default function NotAchievedTasks() {
+  const tasks = useSelector((state) => state.todos.todos) || [];
+  console.log("tasks in NotAchievedTasks:", tasks);
+
+  // console.log(useTaskContext());
+  // const { notAchievedTasks = [] } = useTaskContext() || {};
+  const notAchievedTasks = useMemo(() => {
+    console.log("calling notAchievedTasks filter");
+    return tasks.filter((task) => !task.isComplete);
+  }, [tasks]);
+  const todoListStyle = {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+    width: "100%",
+    marginTop: "20px",
+  };
+
+  const TaskList = notAchievedTasks.map((task) => {
+    if (!task || task.title.trim() === "") return null;
+    return (
+      <TodoElement
+        key={task.id}
+        id={task.id}
+        taskName={task.title}
+        status={task.isComplete}
+        buttonColor={task.buttonColor}
+      />
+    );
+  });
+  return (
+    <div style={todoListStyle} dir="rtl">
+      {TaskList.slice(0, 3)}
+    </div>
+  );
+}
+</file>
+
+<file path="src/redux-features/todosSlice.js">
+import { createSlice } from "@reduxjs/toolkit";
+
+const initialState = {
+  todos: [],
+};
+
+const todosSlice = createSlice({
+  name: "todos",
+  initialState,
+  reducers: {
+    addTodo: (state, action) => {
+      console.log("action.payload in addTodo:", action);
+      const newTask = {
+        id: Date.now(),
+        title: action.payload.taskName,
+        isComplete: false,
+        buttonColor: "white",
+      };
+      state.todos.push(newTask);
+      localStorage.setItem("tasks", JSON.stringify(state.todos));
+    },
+    removeTodo: (state, action) => {
+      state.todos = state.todos.filter((todo) => todo.id !== action.payload);
+    },
+    editTodo: (state, action) => {
+      const { id, newTitle } = action.payload;
+      const todo = state.todos.find((todo) => todo.id === id);
+      if (todo) {
+        todo.title = newTitle;
+      }
+      localStorage.setItem("tasks", JSON.stringify(state.todos));
+    },
+    handleCompleted: (state, action) => {
+      const { id, isCompleted } = action.payload;
+      const todo = state.todos.find((todo) => todo.id === id);
+      if (todo) {
+        todo.isComplete = isCompleted;
+        todo.buttonColor = isCompleted ? "green" : "white";
+      }
+      localStorage.setItem("tasks", JSON.stringify(state.todos));
+    },
+    setTodos: (state, action) => {
+      const storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      state.todos = storedTasks;
+    },
+  },
+});
+export const { addTodo, removeTodo, editTodo, handleCompleted, setTodos } =
+  todosSlice.actions;
+export default todosSlice.reducer;
+</file>
+
+<file path="src/TodoList/TodoElement.js">
+import { useState } from "react";
+// import { useTaskContext } from "../Contexts/TaskContext";
+import EditPopUp from "../features/EditPopUp";
+import SaveSuccess from "../features/SaveSuccess";
+import { useDispatch } from "react-redux";
+import { handleCompleted, removeTodo } from "../redux-features/todosSlice";
+export default function TodoElement({ id, taskName, status, buttonColor }) {
+  const dispatch = useDispatch();
+  console.log("dispatch in TodoElement", handleCompleted, removeTodo);
+  // console.log(useTaskContext());
+  // console.log("EditPopUp import:", EditPopUp);
+  // console.log("SaveSuccess import:", SaveSuccess);
+  // const { deleteTask, handleCompleted } = useTaskContext();
+  const [isCompleted, setIsCompleted] = useState(status);
+  const [isEditPopUpOpen, setIsEditPopUpOpen] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  function handleComplete() {
+    setIsCompleted(!isCompleted);
+    dispatch(handleCompleted({ id, isCompleted: !isCompleted }));
+
+    // if (!isCompleted) {
+    //   completedTaskshandler(id);
+    // } else {
+    //   notCompletedTaskshandler(id);
+    // }
+  }
+
+  const todoElementStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "10px",
+    border: "1px solid rgba(0, 0, 0, 0.2)",
+    borderRadius: "5px",
+    marginBottom: "10px",
+    backgroundColor: "rgb(26, 48, 150)",
+    boxShadow: "0px 4px 6px rgba(15, 5, 5, 0.6)",
+  };
+  // console.log("the button color is", buttonColor);
+  const achievedStyle = {
+    backgroundColor: buttonColor,
+  };
+  function handleDelete() {
+    dispatch(removeTodo(id));
+  }
+  function handleEdit() {
+    setIsEditPopUpOpen(true);
+  }
+  function handleSaveSuccess() {
+    setTimeout(() => {
+      setShowSaveSuccess(true);
+    }, 100);
+    setTimeout(() => {
+      setShowSaveSuccess(false);
+    }, 3000);
+  }
+
+  return (
+    <div>
+      <div style={todoElementStyle} dir="rtl">
+        <div>
+          <h2>{taskName}</h2>
+        </div>
+        <div dir="ltr" style={{ display: "flex", gap: "10px" }}>
+          <button onClick={handleEdit}>تعديل</button>
+          <button onClick={handleDelete}>حذف</button>
+          <button style={achievedStyle} onClick={handleComplete}>
+            منجز
+          </button>
+        </div>
+      </div>
+      <div>
+        {isEditPopUpOpen && (
+          <EditPopUp
+            id={id}
+            currentTitle={taskName}
+            handlePopUpClose={setIsEditPopUpOpen}
+            handleSaveSuccess={handleSaveSuccess}
+          />
+        )}
+        {showSaveSuccess && <SaveSuccess />}
+      </div>
+    </div>
+  );
+}
 </file>
 
 <file path="src/App.css">
@@ -811,33 +985,6 @@ function App() {
 export default App;
 </file>
 
-<file path="src/App.test.js">
-import { render, screen } from '@testing-library/react';
-import App from './App';
-
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
-});
-</file>
-
-<file path="src/index.css">
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-</file>
-
 <file path="src/index.js">
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -845,13 +992,19 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./app/store.js";
+
+console.log("store in index.js:", store);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <Provider store={store}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </Provider>
   </React.StrictMode>,
 );
 
@@ -861,72 +1014,20 @@ root.render(
 reportWebVitals();
 </file>
 
-<file path="src/logo.svg">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 841.9 595.3"><g fill="#61DAFB"><path d="M666.3 296.5c0-32.5-40.7-63.3-103.1-82.4 14.4-63.6 8-114.2-20.2-130.4-6.5-3.8-14.1-5.6-22.4-5.6v22.3c4.6 0 8.3.9 11.4 2.6 13.6 7.8 19.5 37.5 14.9 75.7-1.1 9.4-2.9 19.3-5.1 29.4-19.6-4.8-41-8.5-63.5-10.9-13.5-18.5-27.5-35.3-41.6-50 32.6-30.3 63.2-46.9 84-46.9V78c-27.5 0-63.5 19.6-99.9 53.6-36.4-33.8-72.4-53.2-99.9-53.2v22.3c20.7 0 51.4 16.5 84 46.6-14 14.7-28 31.4-41.3 49.9-22.6 2.4-44 6.1-63.6 11-2.3-10-4-19.7-5.2-29-4.7-38.2 1.1-67.9 14.6-75.8 3-1.8 6.9-2.6 11.5-2.6V78.5c-8.4 0-16 1.8-22.6 5.6-28.1 16.2-34.4 66.7-19.9 130.1-62.2 19.2-102.7 49.9-102.7 82.3 0 32.5 40.7 63.3 103.1 82.4-14.4 63.6-8 114.2 20.2 130.4 6.5 3.8 14.1 5.6 22.5 5.6 27.5 0 63.5-19.6 99.9-53.6 36.4 33.8 72.4 53.2 99.9 53.2 8.4 0 16-1.8 22.6-5.6 28.1-16.2 34.4-66.7 19.9-130.1 62-19.1 102.5-49.9 102.5-82.3zm-130.2-66.7c-3.7 12.9-8.3 26.2-13.5 39.5-4.1-8-8.4-16-13.1-24-4.6-8-9.5-15.8-14.4-23.4 14.2 2.1 27.9 4.7 41 7.9zm-45.8 106.5c-7.8 13.5-15.8 26.3-24.1 38.2-14.9 1.3-30 2-45.2 2-15.1 0-30.2-.7-45-1.9-8.3-11.9-16.4-24.6-24.2-38-7.6-13.1-14.5-26.4-20.8-39.8 6.2-13.4 13.2-26.8 20.7-39.9 7.8-13.5 15.8-26.3 24.1-38.2 14.9-1.3 30-2 45.2-2 15.1 0 30.2.7 45 1.9 8.3 11.9 16.4 24.6 24.2 38 7.6 13.1 14.5 26.4 20.8 39.8-6.3 13.4-13.2 26.8-20.7 39.9zm32.3-13c5.4 13.4 10 26.8 13.8 39.8-13.1 3.2-26.9 5.9-41.2 8 4.9-7.7 9.8-15.6 14.4-23.7 4.6-8 8.9-16.1 13-24.1zM421.2 430c-9.3-9.6-18.6-20.3-27.8-32 9 .4 18.2.7 27.5.7 9.4 0 18.7-.2 27.8-.7-9 11.7-18.3 22.4-27.5 32zm-74.4-58.9c-14.2-2.1-27.9-4.7-41-7.9 3.7-12.9 8.3-26.2 13.5-39.5 4.1 8 8.4 16 13.1 24 4.7 8 9.5 15.8 14.4 23.4zM420.7 163c9.3 9.6 18.6 20.3 27.8 32-9-.4-18.2-.7-27.5-.7-9.4 0-18.7.2-27.8.7 9-11.7 18.3-22.4 27.5-32zm-74 58.9c-4.9 7.7-9.8 15.6-14.4 23.7-4.6 8-8.9 16-13 24-5.4-13.4-10-26.8-13.8-39.8 13.1-3.1 26.9-5.8 41.2-7.9zm-90.5 125.2c-35.4-15.1-58.3-34.9-58.3-50.6 0-15.7 22.9-35.6 58.3-50.6 8.6-3.7 18-7 27.7-10.1 5.7 19.6 13.2 40 22.5 60.9-9.2 20.8-16.6 41.1-22.2 60.6-9.9-3.1-19.3-6.5-28-10.2zM310 490c-13.6-7.8-19.5-37.5-14.9-75.7 1.1-9.4 2.9-19.3 5.1-29.4 19.6 4.8 41 8.5 63.5 10.9 13.5 18.5 27.5 35.3 41.6 50-32.6 30.3-63.2 46.9-84 46.9-4.5-.1-8.3-1-11.3-2.7zm237.2-76.2c4.7 38.2-1.1 67.9-14.6 75.8-3 1.8-6.9 2.6-11.5 2.6-20.7 0-51.4-16.5-84-46.6 14-14.7 28-31.4 41.3-49.9 22.6-2.4 44-6.1 63.6-11 2.3 10.1 4.1 19.8 5.2 29.1zm38.5-66.7c-8.6 3.7-18 7-27.7 10.1-5.7-19.6-13.2-40-22.5-60.9 9.2-20.8 16.6-41.1 22.2-60.6 9.9 3.1 19.3 6.5 28.1 10.2 35.4 15.1 58.3 34.9 58.3 50.6-.1 15.7-23 35.6-58.4 50.6zM320.8 78.4z"/><circle cx="420.9" cy="296.5" r="45.7"/><path d="M520.5 78.1z"/></g></svg>
-</file>
-
-<file path="src/reportWebVitals.js">
-const reportWebVitals = onPerfEntry => {
-  if (onPerfEntry && onPerfEntry instanceof Function) {
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(onPerfEntry);
-      getFID(onPerfEntry);
-      getFCP(onPerfEntry);
-      getLCP(onPerfEntry);
-      getTTFB(onPerfEntry);
-    });
-  }
-};
-
-export default reportWebVitals;
-</file>
-
-<file path="src/setupTests.js">
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
-// expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom';
-</file>
-
-<file path=".gitignore">
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-</file>
-
 <file path="package.json">
 {
   "name": "todo-list",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@reduxjs/toolkit": "^2.12.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.2",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
@@ -956,79 +1057,6 @@ yarn-error.log*
     ]
   }
 }
-</file>
-
-<file path="README.md">
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
 </file>
 
 </files>

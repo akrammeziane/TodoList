@@ -14,7 +14,7 @@ const todosSlice = createSlice({
         id: Date.now(),
         title: action.payload.taskName,
         isComplete: false,
-        buttonColor: "white",
+        buttonColor: "bg-white",
       };
       state.todos.push(newTask);
       localStorage.setItem("tasks", JSON.stringify(state.todos));
@@ -35,7 +35,7 @@ const todosSlice = createSlice({
       const todo = state.todos.find((todo) => todo.id === id);
       if (todo) {
         todo.isComplete = isCompleted;
-        todo.buttonColor = isCompleted ? "green" : "white";
+        todo.buttonColor = isCompleted ? "bg-green-500" : "bg-white";
       }
       localStorage.setItem("tasks", JSON.stringify(state.todos));
     },

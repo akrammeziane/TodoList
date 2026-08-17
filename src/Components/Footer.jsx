@@ -1,6 +1,6 @@
 import { useState } from "react";
 // import { useTaskContext } from "../Contexts/TaskContext";
-import AddSuccess from "../features/AddSuccess.js";
+import AddSuccess from "../features/AddSuccess.jsx";
 import { useDispatch } from "react-redux";
 import { addTodo } from "../redux-features/todosSlice";
 
@@ -26,12 +26,7 @@ export default function Footer() {
       setShowAddSuccess(false);
     }, 3000);
   }
-  const footerStyle = {
-    display: "flex",
-    gap: "10px",
-    marginTop: "10px",
-    width: "100%",
-  };
+
   const buttonStyle = {
     backgroundColor: "rgb(133, 30, 30)",
     color: "white",
@@ -48,15 +43,24 @@ export default function Footer() {
     borderRadius: "5px",
     width: "80%",
   };
+  const footerStyle = {
+    display: "flex",
+    gap: "10px",
+    marginTop: "10px",
+    width: "100%",
+  };
   return (
-    <div style={footerStyle}>
-      <button style={buttonStyle} onClick={handleAddTask}>
-        اضافة
+    <div className="flex gap-2.5 mt-2.5 w-full">
+      <button
+        className={`${inputValue.length > 0 ? "bg-green-500" : "bg-gray-500"} rounded-full p-6 transition-all duration-500 hover:scale-110 text-xl font-bold text-white w-1/6`}
+        onClick={handleAddTask}
+      >
+        +
       </button>
       <input
         type="text"
         placeholder="عنوان المهمة"
-        style={inputStyle}
+        className="border bg-white border-gray-300 rounded-full p-4 w-4/5 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-300"
         value={inputValue}
         onChange={handleInputChange}
       />

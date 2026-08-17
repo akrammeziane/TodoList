@@ -1,18 +1,13 @@
-import TodoElement from "../TodoList/TodoElement";
-import { useTaskContext } from "../Contexts/TaskContext";
+import TodoElement from "../TodoList/TodoElement.";
+// import { useTaskContext } from "../Contexts/TaskContext";
 import { useSelector } from "react-redux";
-import { useMemo } from "react";
 // import { useContext } from "react";
-export default function AchievedTasks() {
+export default function AllTasks() {
   const tasks = useSelector((state) => state.todos.todos) || [];
-  console.log("tasks in AchievedTasks:", tasks);
-  const achievedTasks = useMemo(() => {
-    console.log("calling achievedTasks filter");
-    return tasks.filter((task) => task.isComplete);
-  }, [tasks]);
+  console.log("tasks in AllTasks:", tasks);
   // console.log(useTaskContext());
-  // const { achievedTasks = [] } = useTaskContext() || {};
-  // console.log("achievedTasks", achievedTasks);
+  // const { tasks = [] } = useTaskContext() || {};
+  // tasks.forEach((t) => console.log("task in AllTasks:", t.id, t.buttonColor));
   const todoListStyle = {
     display: "flex",
     flexDirection: "column",
@@ -20,8 +15,9 @@ export default function AchievedTasks() {
     width: "100%",
     marginTop: "20px",
   };
+  // console.log("tasks", tasks);
 
-  const TaskList = achievedTasks.map((task) => {
+  const TaskList = tasks.map((task) => {
     if (!task || task.title.trim() === "") return null;
     return (
       <TodoElement
